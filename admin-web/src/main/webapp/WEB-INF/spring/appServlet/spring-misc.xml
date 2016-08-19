@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+                        http://www.springframework.org/schema/util
+                        http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+
+    <bean id="propertyPlaceholderConfigurer"
+        class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:config/config-${TARGET_ENV:dev}.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- defines a list of simplistic runtime monitors that are executed periodically -->
+    <bean id="monitoring.runtimeMonitor"
+        class="com.lip.core.common.monitor.RuntimeMonitor">
+        <property name="taskDefs">
+            <util:list>
+                <bean parent="parent.monitor.taskdef"
+                class="com.lip.core.common.monitor.MemoryHeapUsageMonitorTask" />
+                <bean parent="parent.monitor.taskdef"
+                class="com.lip.core.common.monitor.PerformanceMonitorTask" />
+            </util:list>
+        </property>
+    </bean>
+
+    <bean id="parent.monitor.taskdef" abstract="true">
+        <constructor-arg><util:constant static-field="java.lang.System.out" /></constructor-arg>
+    </bean>
+
+    <!-- JavaSimon Monitor -->
+    <bean id="monitoringInterceptor"
+        class="com.lip.core.common.aop.JavaSimonMonitoringIntercepter" />
+
+    <bean id="monitoringAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        <property name="advice" ref="monitoringInterceptor" />
+        <property name="pointcut">
+            <bean class="org.javasimon.spring.MonitoredMeasuringPointcut" />
+        </property>
+    </bean>
+
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
+</beans>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+    <!-- Appenders -->
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss.SSS} [%-5p] [%t] [%c] - %m%n" />
+        </layout>
+    </appender>
+
+    <appender name="fileAppender" class="org.apache.log4j.rolling.RollingFileAppender">
+        <!-- The active file to log to -->
+        <param name="file" value="${catalina.base}/logs/admin.log" />
+        <!--添加系统变量log4j.append来控制日志追加，默认(没有配制变量)为true ，方便于开发环境查看-->
+        <param name="append" value="${log4j.append}" />
+
+
+        <rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+            <!-- The file to roll to, this is a fairly intelligent parameter, if the file
+            ends in .gz, it gzips it, based on the date stamp it rolls at that time, 
+            default is yyyy-MM-dd, (rolls at midnight)
+            See: http://logging.apache.org/log4j/companions/extras/apidocs/org/apache/log4j/rolling/TimeBasedRollingPolicy.html -->
+            <param name="FileNamePattern" value="${catalina.base}/logs/admin.%d.log.gz" />
+        </rollingPolicy>
+
+        <layout class="org.apache.log4j.PatternLayout">
+            <!-- The log message pattern -->
+            <param name="ConversionPattern" value="%d{dd MMM yyyy HH:mm:ss.SSS} [%-5p] [%t] [%c] - %m%n" />
+        </layout>
+    </appender>
+    
+    <appender name="asyncEmailer" class="org.apache.log4j.AsyncAppender" >
+        <appender-ref ref="smtp" />
+    </appender>
+
+
+    <!-- 需要记录日志的包 -->
+
+    <logger name="com.lip">
+        <level value="debug" />
+    </logger>
+
+    <logger name="com.lip.core.common.aop">
+        <level value="warn" />F
+    </logger>
+
+    <logger name="org.springframework.core">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.beans">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.context">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.http">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.web">
+        <level value="debug" />
+    </logger>
+
+    <logger name="org.springframework.web.client">
+        <level value="warn" />
+    </logger>
+    
+    <logger name="jdbc.connection">
+        <level value="warn" />
+    </logger>
+    <logger name="jdbc.audit">
+        <level value="warn" />
+    </logger>
+    <logger name="jdbc.resultset">
+        <level value="off" />
+    </logger>
+    <logger name="jdbc.sqlonly">
+        <level value="warn" />
+    </logger>
+    <logger name="jdbc.sqltiming">
+        <level value="info" />
+    </logger>
+
+    <root>
+        <priority value="info" />
+        <appender-ref ref="fileAppender" />
+        <appender-ref ref="asyncEmailer" />
+    </root>
+
+</log4j:configuration>

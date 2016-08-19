@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- - Sample namespace-based configuration - -->
+
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+                        http://www.springframework.org/schema/security 
+                        http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+	
+	<!-- For Web security -->
+	<http pattern="/js/**" security="none"/>  
+  	<http pattern="/images/**" security="none"/>
+  	<http pattern="/mgmt/**" security="none"/>
+  	<http pattern="/image_sys/**" security="none"/>
+  	<http pattern="/style/**" security="none"/>
+  	<http pattern="/view/login.jsp" security="none"/>
+  	<http pattern="/view/login/forgotPassword.jsp" security="none"/>
+  	<http pattern="/securityCodeImage.html" security="none"/>
+  	<http pattern="/checkSecurityCode.html" security="none"/>
+  	<http pattern="/admin/validateMobile.html" security="none"/>
+  	<http pattern="/verifycode/sendVerifyCode.html" security="none"/>
+  	<http pattern="/admin/resetPassword.html" security="none"/>
+  	
+  	<!-- 临时测试汇付的回调接口 -->
+  	<http pattern="/third/queryAcct/receiveUserTransferS2S.html" security="none"/>
+  	<http pattern="/third/addLoan/receiveAddLoanS2S.html" security="none"/>
+  	<http pattern="/third/repay/receiveRepayS2S.html" security="none"/>
+  	<http pattern="/third/loans/receiveLoansS2S.html" security="none"/>
+  	
+  	
+  	
+    <http use-expressions="true" entry-point-ref="authenticationProcessingFilterEntryPoint" access-denied-page="/view/403.jsp">
+        <intercept-url pattern="/**" access="isAuthenticated()" />
+        <remember-me />
+        <expression-handler ref="webSecurityExpressionHandler"/>
+        <custom-filter ref="loginFilter"  position="FORM_LOGIN_FILTER" />
+        <logout logout-url="/j_spring_security_logout" logout-success-url="/view/login.jsp" delete-cookies="JSESSIONID"/>
+    </http>
+  	
+  	<!-- 未登录的切入点 -->  
+    <beans:bean id="authenticationProcessingFilterEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">  
+        <beans:property name="loginFormUrl" value="/view/login.jsp"></beans:property>  
+    </beans:bean> 
+    
+    <!-- 登录体系loginFilter -->
+  <beans:bean id="loginFilter"
+        class="com.lip.admin.common.security.AdminUsernamePasswordAuthenticationFilter">
+        <beans:property name="filterProcessesUrl" value="/j_spring_security_check"></beans:property>
+        <beans:property name="authenticationSuccessHandler" ref="myAuthenticationSuccessHandler"></beans:property>
+        <beans:property name="authenticationFailureHandler" ref="myAuthenticationFailureHandler"></beans:property>
+        <beans:property name="authenticationManager" ref="authenticationManager"></beans:property>
+    </beans:bean>
+    
+    <!-- 验证失败显示页面 -->
+    <beans:bean id="myAuthenticationFailureHandler"
+        class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+        <beans:property name="defaultFailureUrl" value="/view/login.jsp?error=true" />
+    </beans:bean>
+<!-- 验证成功默认显示页面  -->
+    <beans:bean id="myAuthenticationSuccessHandler"
+        class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+        <beans:property name="alwaysUseDefaultTargetUrl" value="true" />
+        <!--此处可以请求登录首页的action地址  -->
+        <beans:property name="defaultTargetUrl" value="/index/homepage" />
+    </beans:bean>
+    
+
+<!-- authentication体系 -->
+    <authentication-manager alias="authenticationManager" erase-credentials="false">
+        <authentication-provider ref="authenticationProvider" />
+    </authentication-manager>
+    <beans:bean id="authenticationProvider"
+        class="com.lip.admin.common.security.AdminAuthenticationProvider">
+        <beans:property name="userDetailsService" ref="userDetailsService" />
+    </beans:bean>
+    <beans:bean id="userDetailsService"
+        class="com.lip.admin.common.security.AdminUserDetailsService">
+        <beans:property name="adminService" ref="adminServiceImpl"></beans:property>
+    </beans:bean>
+
+
+    
+    <global-method-security pre-post-annotations="enabled">
+        <expression-handler ref="expressionHandler"/>
+    </global-method-security>
+    
+    <beans:bean id="permissionEvaluator" class="com.lip.admin.common.security.PermissionEvaluatorWrapper">
+        <beans:property name="prefixPermissionEvaluators">
+            <beans:map>
+                <beans:entry key="security.operation.">
+                    <beans:bean class="com.lip.admin.common.security.OperationPermissionEvaluator">
+                    </beans:bean>
+                </beans:entry>
+            </beans:map>
+        </beans:property>
+    </beans:bean>
+    <beans:bean id="expressionHandler"
+        class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+        <beans:property name="permissionEvaluator" ref="permissionEvaluator" />
+    </beans:bean>
+    <!-- Web Security ExpressionHandler -->
+    <beans:bean id="webSecurityExpressionHandler"
+        class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler">
+        <beans:property name="permissionEvaluator" ref="permissionEvaluator"></beans:property>
+    </beans:bean>
+    
+
+
+</beans:beans>
